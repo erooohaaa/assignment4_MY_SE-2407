@@ -14,8 +14,7 @@ public class BST<K extends Comparable<K>, V> {
     }
 
     public void put(K key, V val) {
-        // Тупая заглушка
-        throw new UnsupportedOperationException("Метод не реализован");
+
     }
 
     public V get(K key) {

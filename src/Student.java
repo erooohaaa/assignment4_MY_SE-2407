@@ -9,6 +9,6 @@ public class Student {
 
     @Override
     public String toString() {
-        return name + " (" + age + ")";
+        return "Student{name='" + name + "', age=" + age + "}";
     }
 }

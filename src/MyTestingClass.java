@@ -9,12 +9,12 @@ public class MyTestingClass {
 
     @Override
     public int hashCode() {
-        int hash = 17;
-        hash = 31 * hash + id;
-        for (int i = 0; i < name.length(); i++) {
-            hash = 31 * hash + name.charAt(i);
+        int result = 17;
+        result = 31 * result + id;
+        for (char c : name.toCharArray()) {
+            result = 31 * result + c;
         }
-        return Math.abs(hash);
+        return result;
     }
 
     @Override
@@ -23,5 +23,10 @@ public class MyTestingClass {
         if (obj == null || getClass() != obj.getClass()) return false;
         MyTestingClass other = (MyTestingClass) obj;
         return id == other.id && name.equals(other.name);
+    }
+
+    @Override
+    public String toString() {
+        return "(" + id + ", " + name + ")";
     }
 }

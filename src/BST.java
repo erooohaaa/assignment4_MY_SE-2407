@@ -1,10 +1,12 @@
-import java.util.*;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.Stack;
 
-public class BST<K extends Comparable<K>, V> {
+public class BST<K extends Comparable<K>, V> implements Iterable<BST<K, V>.NodeEntry> {
     private Node root;
     private int size;
 
-    private class Node {
+    public class Node {
         private K key;
         private V val;
         private Node left, right;
@@ -15,104 +17,11 @@ public class BST<K extends Comparable<K>, V> {
         }
     }
 
-    public int size() {
-        return size;
-    }
+    public class NodeEntry {
+        private final K key;
+        private final V value;
 
-    public void put(K key, V val) {
-        Node newNode = new Node(key, val);
-        if (root == null) {
-            root = newNode;
-            size++;
-            return;
-        }
-
-        Node current = root;
-        Node parent = null;
-        while (current != null) {
-            parent = current;
-            int cmp = key.compareTo(current.key);
-            if (cmp < 0) current = current.left;
-            else if (cmp > 0) current = current.right;
-            else {
-                current.val = val;
-                return;
-            }
-        }
-
-        if (key.compareTo(parent.key) < 0) parent.left = newNode;
-        else parent.right = newNode;
-        size++;
-    }
-
-    public V get(K key) {
-        Node current = root;
-        while (current != null) {
-            int cmp = key.compareTo(current.key);
-            if (cmp < 0) current = current.left;
-            else if (cmp > 0) current = current.right;
-            else return current.val;
-        }
-        return null;
-    }
-
-    public void delete(K key) {
-        Node parent = null;
-        Node current = root;
-        while (current != null && !current.key.equals(key)) {
-            parent = current;
-            int cmp = key.compareTo(current.key);
-            if (cmp < 0) current = current.left;
-            else current = current.right;
-        }
-
-        if (current == null) return;
-
-        if (current.left == null && current.right == null) replaceNode(parent, current, null);
-        else if (current.left == null) replaceNode(parent, current, current.right);
-        else if (current.right == null) replaceNode(parent, current, current.left);
-        else {
-            Node successorParent = current;
-            Node successor = current.right;
-            while (successor.left != null) {
-                successorParent = successor;
-                successor = successor.left;
-            }
-            current.key = successor.key;
-            current.val = successor.val;
-            replaceNode(successorParent, successor, successor.right);
-        }
-        size--;
-    }
-
-    private void replaceNode(Node parent, Node oldNode, Node newNode) {
-        if (parent == null) root = newNode;
-        else if (parent.left == oldNode) parent.left = newNode;
-        else parent.right = newNode;
-    }
-
-    public Iterable<Entry<K, V>> iterator() {
-        List<Entry<K, V>> entries = new ArrayList<>();
-        Stack<Node> stack = new Stack<>();
-        Node current = root;
-
-        while (current != null || !stack.isEmpty()) {
-            while (current != null) {
-                stack.push(current);
-                current = current.left;
-            }
-            current = stack.pop();
-            entries.add(new Entry<>(current.key, current.val));
-            current = current.right;
-        }
-        return entries;
-    }
-
-    public static class Entry<K, V> {
-        private K key;
-        private V value;
-
-        public Entry(K key, V value) {
+        public NodeEntry(K key, V value) {
             this.key = key;
             this.value = value;
         }
@@ -123,6 +32,115 @@ public class BST<K extends Comparable<K>, V> {
 
         public V getValue() {
             return value;
+        }
+    }
+
+    public void put(K key, V val) {
+        root = put(root, key, val);
+    }
+
+    private Node put(Node node, K key, V val) {
+        if (node == null) {
+            size++;
+            return new Node(key, val);
+        }
+        int cmp = key.compareTo(node.key);
+        if (cmp < 0) {
+            node.left = put(node.left, key, val);
+        } else if (cmp > 0) {
+            node.right = put(node.right, key, val);
+        } else {
+            node.val = val;
+        }
+        return node;
+    }
+
+    public V get(K key) {
+        Node node = root;
+        while (node != null) {
+            int cmp = key.compareTo(node.key);
+            if (cmp < 0) {
+                node = node.left;
+            } else if (cmp > 0) {
+                node = node.right;
+            } else {
+                return node.val;
+            }
+        }
+        return null;
+    }
+
+    public void delete(K key) {
+        root = delete(root, key);
+    }
+
+    private Node delete(Node node, K key) {
+        if (node == null) return null;
+        int cmp = key.compareTo(node.key);
+        if (cmp < 0) {
+            node.left = delete(node.left, key);
+        } else if (cmp > 0) {
+            node.right = delete(node.right, key);
+        } else {
+            size--;
+            if (node.right == null) return node.left;
+            if (node.left == null) return node.right;
+            Node t = node;
+            node = min(t.right);
+            node.right = deleteMin(t.right);
+            node.left = t.left;
+        }
+        return node;
+    }
+
+    private Node min(Node node) {
+        if (node.left == null) return node;
+        else return min(node.left);
+    }
+
+    private Node deleteMin(Node node) {
+        if (node.left == null) return node.right;
+        node.left = deleteMin(node.left);
+        return node;
+    }
+
+    public int size() {
+        return size;
+    }
+
+    @Override
+    public Iterator<NodeEntry> iterator() {
+        return new BSTIterator();
+    }
+
+    private class BSTIterator implements Iterator<NodeEntry> {
+        private Stack<Node> stack = new Stack<>();
+
+        public BSTIterator() {
+            pushLeft(root);
+        }
+
+        private void pushLeft(Node node) {
+            while (node != null) {
+                stack.push(node);
+                node = node.left;
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return !stack.isEmpty();
+        }
+
+        @Override
+        public NodeEntry next() {
+            if (!hasNext()) throw new NoSuchElementException();
+            Node node = stack.pop();
+            NodeEntry entry = new NodeEntry(node.key, node.val);
+            if (node.right != null) {
+                pushLeft(node.right);
+            }
+            return entry;
         }
     }
 }

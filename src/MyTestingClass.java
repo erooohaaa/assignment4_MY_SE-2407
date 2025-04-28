@@ -1,5 +1,3 @@
-import java.util.Random;
-
 public class MyTestingClass {
     private int id;
     private String name;
@@ -16,7 +14,7 @@ public class MyTestingClass {
         for (int i = 0; i < name.length(); i++) {
             hash = 31 * hash + name.charAt(i);
         }
-        return hash;
+        return Math.abs(hash);
     }
 
     @Override
